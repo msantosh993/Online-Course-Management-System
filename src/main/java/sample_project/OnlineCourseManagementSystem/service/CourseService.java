@@ -1,19 +1,16 @@
 package sample_project.OnlineCourseManagementSystem.service;
 
-import java.util.List;
 import java.util.Optional;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import sample_project.OnlineCourseManagementSystem.dto.CourseDto;
 import sample_project.OnlineCourseManagementSystem.exceptionHandler.CourseAlreadyExist;
 import sample_project.OnlineCourseManagementSystem.exceptionHandler.CourseNotFound;
-import sample_project.OnlineCourseManagementSystem.exceptionHandler.InstructorNotFound;
+import sample_project.OnlineCourseManagementSystem.exceptionHandler.UserNotFound;
 import sample_project.OnlineCourseManagementSystem.model.Course;
-import sample_project.OnlineCourseManagementSystem.model.Instructor;
+import sample_project.OnlineCourseManagementSystem.model.Users;
 import sample_project.OnlineCourseManagementSystem.repo.CourseRepo;
-import sample_project.OnlineCourseManagementSystem.repo.InstructorRepo;
+import sample_project.OnlineCourseManagementSystem.repo.UsersRepo;
 
 @Service
 public class CourseService {
@@ -22,7 +19,7 @@ public class CourseService {
 	private CourseRepo courseRepo;
 
 	@Autowired
-	private InstructorRepo instructorRepo;
+	private UsersRepo userRepo;
 
 	public Course createCourse(CourseDto courseDto) {
 		Course existedCourse = courseRepo.findByCourseTitle(courseDto.getCourseTitle());
@@ -31,7 +28,7 @@ public class CourseService {
 					"there is already a course existed with that name you have to create a course with another name");
 		}
 		Course course = new Course();
-		Optional<Instructor> instructor = instructorRepo.findById(courseDto.getInstructorId());
+		Optional<Users> instructor = userRepo.findById(courseDto.getInstructorId());
 		if (instructor.isPresent()) {
 			course.setInstructor(instructor.get());
 			course.setCourseTitle(courseDto.getCourseTitle());
@@ -39,7 +36,7 @@ public class CourseService {
 			course.setCourseCreatedAt(courseDto.getCourseCreatedAt());
 			return courseRepo.save(course);
 		}
-		throw new InstructorNotFound("Instructor not found with ID: " + courseDto.getInstructorId());
+		throw new UserNotFound("Instructor not found with ID: " + courseDto.getInstructorId());
 
 	}
 
@@ -66,11 +63,11 @@ public class CourseService {
 			existingCourse.setCourseTitle(courseDto.getCourseTitle());
 			existingCourse.setCourseDescription(courseDto.getCourseDescription());
 			existingCourse.setCourseCreatedAt(courseDto.getCourseCreatedAt());
-			Optional<Instructor> instructor = instructorRepo.findById(courseDto.getInstructorId());
+			Optional<Users> instructor = userRepo.findById(courseDto.getInstructorId());
 			if (instructor.isPresent()) {
 				existingCourse.setInstructor(instructor.get());
 			} else {
-				throw new InstructorNotFound("Instructor not found with ID: " + courseDto.getInstructorId());
+				throw new UserNotFound("Instructor not found with ID: " + courseDto.getInstructorId());
 			}
 			return courseRepo.save(existingCourse);
 		}
@@ -87,7 +84,4 @@ public class CourseService {
 		}
 	}
 
-	public List<Course> findAllCourses() {
-		return courseRepo.findAll();
-	}
 }

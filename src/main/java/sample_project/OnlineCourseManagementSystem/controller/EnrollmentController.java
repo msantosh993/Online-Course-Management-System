@@ -13,10 +13,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
 import jakarta.validation.Valid;
+import sample_project.OnlineCourseManagementSystem.dto.EnrollmentDetails;
 import sample_project.OnlineCourseManagementSystem.dto.EnrollmentDto;
-import sample_project.OnlineCourseManagementSystem.model.Enrollment;
 import sample_project.OnlineCourseManagementSystem.service.EnrollmentService;
 
 @RestController
@@ -29,22 +28,22 @@ public class EnrollmentController {
 
 	@PreAuthorize("hasRole('ROLE_STUDENT')")
 	@PostMapping("/enrollStudent")
-	public ResponseEntity<Enrollment> enrollStudent(@Valid @RequestBody EnrollmentDto enrollmentDto) {
-		Enrollment enrollment = enrollmentService.enrollment(enrollmentDto);
+	public ResponseEntity<String> enrollStudent(@Valid @RequestBody EnrollmentDto enrollmentDto) {
+		String enrollment = enrollmentService.enrollment(enrollmentDto);
 		return new ResponseEntity<>(enrollment, HttpStatus.CREATED);
 	}
 
 	@PreAuthorize("hasRole('ROLE_STUDENT')")
 	@GetMapping("/getEnrollment/{enrollmentId}")
-	public ResponseEntity<Enrollment> getEnrollment(@PathVariable Integer enrollmentId) {
-		Enrollment enrollment = enrollmentService.getEnrollment(enrollmentId);
+	public ResponseEntity<EnrollmentDetails> getEnrollment(@PathVariable Integer enrollmentId) {
+		EnrollmentDetails enrollment = enrollmentService.getEnrollment(enrollmentId);
 		return new ResponseEntity<>(enrollment, HttpStatus.OK);
 	}
-	
-	@PreAuthorize("hasAnyRole('ROLE_INSTRUCTOR')")
-	@GetMapping("/getAllEnrollments")
-	public ResponseEntity<List<Enrollment>> getAllEnrollments() {
-		List<Enrollment> allEnrollments = enrollmentService.getAllEnrollments();
+
+	@PreAuthorize("hasRole('ROLE_INSTRUCTOR')")
+	@GetMapping("/getAllEnrollmentsOfaCourse/{courseId}")
+	public ResponseEntity<List<EnrollmentDetails>> getAllEnrollments(@PathVariable Integer courseId) {
+		List<EnrollmentDetails> allEnrollments = enrollmentService.getAllEnrollments(courseId);
 		return new ResponseEntity<>(allEnrollments, HttpStatus.OK);
 	}
 }

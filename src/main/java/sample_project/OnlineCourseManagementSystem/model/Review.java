@@ -20,7 +20,7 @@ public class Review {
 	private String reviewedAt;
 	@ManyToOne
 	@JoinColumn(name = "student_id", nullable = false)
-	private Student student;
+	private Users student;
 	@ManyToOne
 	@JoinColumn(name = "course_id", nullable = false)
 	private Course course;

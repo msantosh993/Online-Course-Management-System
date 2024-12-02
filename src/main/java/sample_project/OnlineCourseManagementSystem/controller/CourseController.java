@@ -12,8 +12,6 @@ import sample_project.OnlineCourseManagementSystem.dto.CourseDto;
 import sample_project.OnlineCourseManagementSystem.model.Course;
 import sample_project.OnlineCourseManagementSystem.service.CourseService;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/courses")
 @Validated
@@ -56,12 +54,5 @@ public class CourseController {
 	public ResponseEntity<String> deleteCourse(@PathVariable Integer courseId) {
 		String response = courseService.deleteCourse(courseId);
 		return new ResponseEntity<>(response, HttpStatus.OK);
-	}
-
-	@PreAuthorize("hasRole('ROLE_INSTRUCTOR')")
-	@GetMapping("/getAllCourses")
-	public ResponseEntity<List<Course>> getAllCourses() {
-		List<Course> courses = courseService.findAllCourses();
-		return new ResponseEntity<>(courses, HttpStatus.OK);
 	}
 }

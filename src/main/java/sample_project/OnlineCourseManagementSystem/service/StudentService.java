@@ -1,82 +1,93 @@
 package sample_project.OnlineCourseManagementSystem.service;
 
-import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import sample_project.OnlineCourseManagementSystem.dto.StudentDetails;
 import sample_project.OnlineCourseManagementSystem.dto.StudentDto;
-import sample_project.OnlineCourseManagementSystem.exceptionHandler.StudentAlreadyExist;
-import sample_project.OnlineCourseManagementSystem.exceptionHandler.StudentNotFound;
-import sample_project.OnlineCourseManagementSystem.model.Student;
-import sample_project.OnlineCourseManagementSystem.repo.StudentRepo;
+import sample_project.OnlineCourseManagementSystem.exceptionHandler.UserNotFound;
+import sample_project.OnlineCourseManagementSystem.model.Users;
+import sample_project.OnlineCourseManagementSystem.repo.UsersRepo;
 
 @Service
 public class StudentService {
 
 	@Autowired
-	private StudentRepo studentRepo;
+	private UsersRepo userRepo;
+	private BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
 
-	public Student createStudent(StudentDto studentDto) {
-		Optional<Student> existedStudent = studentRepo.findByStudentEmailId(studentDto.getStudentEmailId());
-		if (existedStudent.isPresent()) {
-			throw new StudentAlreadyExist(
-					"there is already a student existed with this email id please register with another email id");
+	public StudentDetails findStudentById(Integer id) {
+		Optional<Users> student = userRepo.findById(id);
+		if (student.isPresent() && (student.get().getRole().toString()).equals("ROLE_STUDENT")) {
+			Users fetchedStudent = student.get();
+			StudentDetails resultedStudent = new StudentDetails();
+			resultedStudent.setStudentName(fetchedStudent.getUsername());
+			resultedStudent.setPassword(fetchedStudent.getPassword());
+			resultedStudent.setEmailId(fetchedStudent.getEmailId());
+			resultedStudent.setPhoneNumber(fetchedStudent.getPhoneNumber());
+			resultedStudent.setRole(fetchedStudent.getRole().toString());
+			resultedStudent.setLocation(fetchedStudent.getLocation());
+			resultedStudent.setEducationBackground(fetchedStudent.getEducationBackground());
+			resultedStudent.setRegisteredAt(fetchedStudent.getRegisteredAt());
+			return resultedStudent;
 		}
-		Student student = new Student();
-		student.setStudentName(studentDto.getStudentName());
-		student.setStudentPhoneNumber(studentDto.getStudentPhoneNumber());
-		student.setStudentEmailId(studentDto.getStudentEmailId());
-		student.setStudentLocation(studentDto.getStudentLocation());
-		student.setRegisteredAt(studentDto.getRegisteredAt());
-		student.setStudentEducationBackGround(studentDto.getStudentEducationBackGround());
-		return studentRepo.save(student);
+		throw new UserNotFound("Student not found with id: " + id);
 	}
 
-	public Student getStudentById(Integer id) {
-		Optional<Student> optionalStudent = studentRepo.findById(id);
-		if (optionalStudent.isPresent()) {
-			return optionalStudent.get();
-		} else {
-			throw new StudentNotFound("Student not found with ID: " + id);
+	public StudentDetails findStudentByUserName(String username) {
+		Users student = userRepo.findByusername(username);
+		if (student != null && (student.getRole().toString()).equals("ROLE_STUDENT")) {
+			StudentDetails resultedStudent = new StudentDetails();
+			resultedStudent.setStudentName(student.getUsername());
+			resultedStudent.setPassword(student.getPassword());
+			resultedStudent.setEmailId(student.getEmailId());
+			resultedStudent.setPhoneNumber(student.getPhoneNumber());
+			resultedStudent.setRole(student.getRole().toString());
+			resultedStudent.setLocation(student.getLocation());
+			resultedStudent.setEducationBackground(student.getEducationBackground());
+			resultedStudent.setRegisteredAt(student.getRegisteredAt());
+			return resultedStudent;
 		}
+		throw new UserNotFound("Student not found with username: " + username);
 	}
 
-	public Student getStudentByName(String studentName) {
-		Student fetchedStudent = studentRepo.findByStudentName(studentName);
-		if (fetchedStudent == null) {
-			throw new StudentNotFound("Student not found with Name: " + studentName);
+	public String updateStudentById(Integer id, StudentDto studentDto) {
+		Optional<Users> student = userRepo.findById(id);
+		if (student.isPresent() && (student.get().getRole().toString()).equals("ROLE_STUDENT")) {
+			Users existingStudent = student.get();
+			if (studentDto.getRole() == null || !studentDto.getRole().equalsIgnoreCase("ROLE_STUDENT")) {
+				throw new IllegalArgumentException("Invalid role specified. Allowed role: ROLE_STUDENT.");
+			}
+			sample_project.OnlineCourseManagementSystem.enums.Role userRole;
+			try {
+				userRole = sample_project.OnlineCourseManagementSystem.enums.Role
+						.valueOf(studentDto.getRole().toUpperCase());
+			} catch (IllegalArgumentException e) {
+				throw new IllegalArgumentException("Invalid role: " + studentDto.getRole());
+			}
+			existingStudent.setUsername(studentDto.getUsername());
+			existingStudent.setPassword(encoder.encode(studentDto.getPassword()));
+			existingStudent.setEmailId(studentDto.getEmailId());
+			existingStudent.setPhoneNumber(studentDto.getPhoneNumber());
+			existingStudent.setRole(userRole);
+			existingStudent.setLocation(studentDto.getLocation());
+			existingStudent.setRegisteredAt(studentDto.getRegisteredAt());
+			existingStudent.setEducationBackground(studentDto.getEducationBackground());
+			userRepo.save(existingStudent);
+			return "Student with id " + id + " details updated successfully";
 		}
-		return fetchedStudent;
-	}
-
-	public Student updateStudent(Integer id, StudentDto studentDto) {
-		Optional<Student> optionalStudent = studentRepo.findById(id);
-		if (optionalStudent.isPresent()) {
-			Student student = optionalStudent.get();
-			student.setStudentName(studentDto.getStudentName());
-			student.setStudentPhoneNumber(studentDto.getStudentPhoneNumber());
-			student.setStudentEmailId(studentDto.getStudentEmailId());
-			student.setStudentLocation(studentDto.getStudentLocation());
-			student.setRegisteredAt(studentDto.getRegisteredAt());
-			student.setStudentEducationBackGround(studentDto.getStudentEducationBackGround());
-			return studentRepo.save(student);
-		} else {
-			throw new StudentNotFound("Student not found with ID: " + id);
-		}
+		throw new UserNotFound("Student not found with Id: " + id);
 	}
 
 	public String deleteStudent(Integer id) {
-		Optional<Student> optionalStudent = studentRepo.findById(id);
-		if (optionalStudent.isPresent()) {
-			studentRepo.delete(optionalStudent.get());
-			return "student deleted successfully with id " + optionalStudent.get().getStudentId();
+		Optional<Users> student = userRepo.findById(id);
+		if (student.isPresent() && (student.get().getRole().toString()).equals("ROLE_STUDENT")) {
+			userRepo.delete(student.get());
+			return "Student deleted successfully with id: " + id;
 		}
-		throw new StudentNotFound("Student not found with ID: " + id);
-	}
-
-	public List<Student> findAllStudents() {
-		return studentRepo.findAll();
+		throw new UserNotFound("Student not found with id: " + id);
 	}
 }

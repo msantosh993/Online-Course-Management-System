@@ -1,14 +1,14 @@
 package sample_project.OnlineCourseManagementSystem.exceptionHandler;
 
-public class InstructorNotFound extends RuntimeException{
+public class UserNotFound extends RuntimeException {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = 1L;
-	public InstructorNotFound(String message)
-	{
+
+	public UserNotFound(String message) {
 		super(message);
 	}
-	
+
 }

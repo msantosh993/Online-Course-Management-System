@@ -65,13 +65,11 @@ public class ContentController {
 		return new ResponseEntity<>(contentDto, HttpStatus.OK);
 	}
 
-	@PreAuthorize("hasRole('ROLE_INSTRUCTOR')")
-	@GetMapping("/getAllContentsWithoutFile")
-	public ResponseEntity<List<ContentDto>> getAllContentsWithoutFile() {
-		List<ContentDto> contentDtos = contentService.getAllContentsWithoutFile();
-		return new ResponseEntity<>(contentDtos, HttpStatus.OK);
-	}
-
+	@PreAuthorize("hasAnyRole('ROLE_INSTRUCTOR','ROLE_STUDENT')")
+	@GetMapping("/getAllContentsByCourseIdWithoutFiles/{courseId}")
+    public List<ContentDto> getContentsByCourseId(@PathVariable Integer courseId) {
+        return contentService.getContentsByCourseId(courseId);
+    }
 	@PreAuthorize("hasAnyRole('ROLE_INSTRUCTOR','ROLE_STUDENT')")
 	@GetMapping("/downloadContentById/{contentId}")
 	public ResponseEntity<byte[]> downloadContentById(@PathVariable Integer contentId) {

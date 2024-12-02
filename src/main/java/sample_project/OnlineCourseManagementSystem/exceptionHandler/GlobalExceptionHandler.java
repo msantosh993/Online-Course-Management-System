@@ -4,7 +4,9 @@ import java.time.LocalDateTime;
 
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -40,15 +42,8 @@ public class GlobalExceptionHandler {
 
 	@ResponseBody
 	@ResponseStatus(value = HttpStatus.NOT_FOUND)
-	@ExceptionHandler(value = InstructorNotFound.class)
-	public ApplicationErrors instructorNotFoundHandler(InstructorNotFound ex) {
-		return new ApplicationErrors(LocalDateTime.now(), ex.getMessage(), HttpStatus.NOT_FOUND.getReasonPhrase());
-	}
-
-	@ResponseBody
-	@ResponseStatus(value = HttpStatus.NOT_FOUND)
-	@ExceptionHandler(value = StudentNotFound.class)
-	public ApplicationErrors studentNotFoundHandler(StudentNotFound ex) {
+	@ExceptionHandler(value = UserNotFound.class)
+	public ApplicationErrors userNotFoundHandler(UserNotFound ex) {
 		return new ApplicationErrors(LocalDateTime.now(), ex.getMessage(), HttpStatus.NOT_FOUND.getReasonPhrase());
 	}
 
@@ -89,15 +84,20 @@ public class GlobalExceptionHandler {
 
 	@ResponseBody
 	@ResponseStatus(value = HttpStatus.CONFLICT)
-	@ExceptionHandler(value = StudentAlreadyExist.class)
-	public ApplicationErrors studentAlreadyExisHandler(StudentAlreadyExist ex) {
-		return new ApplicationErrors(LocalDateTime.now(), ex.getMessage(), HttpStatus.CONFLICT.getReasonPhrase());
-	}
-
-	@ResponseBody
-	@ResponseStatus(value = HttpStatus.CONFLICT)
 	@ExceptionHandler(value = UserAlreadyExist.class)
 	public ApplicationErrors userAlreadyExisHandler(UserAlreadyExist ex) {
 		return new ApplicationErrors(LocalDateTime.now(), ex.getMessage(), HttpStatus.CONFLICT.getReasonPhrase());
 	}
+	
+	@ResponseBody
+	@ResponseStatus(value = HttpStatus.FORBIDDEN)
+	@ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApplicationErrors> handleAccessDeniedException(AccessDeniedException ex) {
+        ApplicationErrors errorResponse = new ApplicationErrors(
+                LocalDateTime.now(),
+                "Access Denied: You are not authorized to perform this action.",
+                HttpStatus.FORBIDDEN.getReasonPhrase()
+        );
+        return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
+    }
 }

@@ -46,7 +46,7 @@ public class ContentService {
 		content.setContentFile(file.getBytes());
 		Content contentCreated = contentRepo.save(content);
 		if (contentCreated != null) {
-			return "file uploaded successfully : " + file.getOriginalFilename();
+			return "file uploaded successfully : " + file.getOriginalFilename()+" and Content id is "+contentCreated.getContentId();
 		}
 		return null;
 	}
@@ -83,19 +83,23 @@ public class ContentService {
 		}
 	}
 
-	public List<ContentDto> getAllContentsWithoutFile() {
-		List<Content> listOfContents = contentRepo.findAll();
-		List<ContentDto> listOfContentDtos = new ArrayList<>();
-		for (Content content : listOfContents) {
-			ContentDto contentDto = new ContentDto();
-			contentDto.setContentTitle(content.getContentTitle());
-			contentDto.setContentCreatedAt(content.getContentCreatedAt());
-			contentDto.setCourseId(content.getCourse().getCourseId());
-			listOfContentDtos.add(contentDto);
-		}
-		return listOfContentDtos;
-	}
+	public List<ContentDto> getContentsByCourseId(Integer courseId) {
+        List<Content> contents = contentRepo.findByCourseCourseId(courseId);
 
+        if (contents.isEmpty()) {
+            throw new ContentNotFound("No content found for Course ID: " + courseId);
+        }
+
+        List<ContentDto> contentDtos = new ArrayList<>();
+        for (Content content : contents) {
+            ContentDto contentDto = new ContentDto();
+            contentDto.setContentTitle(content.getContentTitle());
+            contentDto.setContentCreatedAt(content.getContentCreatedAt());
+            contentDto.setCourseId(content.getCourse().getCourseId());
+            contentDtos.add(contentDto);
+        }
+        return contentDtos;
+    }
 	public String updateContent(Integer contentId, ContentDto contentDto, MultipartFile file) throws IOException {
 		Optional<Content> optionalContent = contentRepo.findById(contentId);
 		if (optionalContent.isPresent()) {
@@ -105,7 +109,7 @@ public class ContentService {
 			content.setContentFile(file.getBytes());
 			Content updatedContent = contentRepo.save(content);
 			if (updatedContent != null) {
-				return "file updated successfully New File : " + file.getOriginalFilename();
+				return "file updated successfully for content id "+contentId+" New File Name : " + file.getOriginalFilename();
 			}
 			return null;
 		}
@@ -116,7 +120,7 @@ public class ContentService {
 		Optional<Content> content = contentRepo.findById(contentId);
 		if (content.isPresent()) {
 			contentRepo.delete(content.get());
-			return "Content deleted successfully: " + content.get().getContentTitle();
+			return "Content deleted successfully for content id "+contentId+" and content file " +content.get().getContentTitle();
 		} else {
 			throw new ContentNotFound("Content not found with ID: " + contentId);
 		}

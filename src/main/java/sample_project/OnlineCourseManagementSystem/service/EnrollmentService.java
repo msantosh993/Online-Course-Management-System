@@ -1,20 +1,23 @@
 package sample_project.OnlineCourseManagementSystem.service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import sample_project.OnlineCourseManagementSystem.dto.EnrollmentDetails;
 import sample_project.OnlineCourseManagementSystem.dto.EnrollmentDto;
+import sample_project.OnlineCourseManagementSystem.dto.StudentDto;
 import sample_project.OnlineCourseManagementSystem.exceptionHandler.CourseNotFound;
 import sample_project.OnlineCourseManagementSystem.exceptionHandler.EnrollmentNotFound;
 import sample_project.OnlineCourseManagementSystem.model.Course;
 import sample_project.OnlineCourseManagementSystem.model.Enrollment;
-import sample_project.OnlineCourseManagementSystem.model.Student;
+import sample_project.OnlineCourseManagementSystem.model.Users;
 import sample_project.OnlineCourseManagementSystem.repo.CourseRepo;
 import sample_project.OnlineCourseManagementSystem.repo.EnrollmentRepo;
-import sample_project.OnlineCourseManagementSystem.repo.StudentRepo;
+import sample_project.OnlineCourseManagementSystem.repo.UsersRepo;
 
 @Service
 public class EnrollmentService {
@@ -23,7 +26,7 @@ public class EnrollmentService {
 	private CourseRepo courseRepo;
 
 	@Autowired
-	private StudentRepo studentRepo;
+	private UsersRepo studentRepo;
 
 	@Autowired
 	private EnrollmentRepo enrollmentRepo;
@@ -31,7 +34,7 @@ public class EnrollmentService {
 	@Autowired
 	private EmailService emailService;
 
-	public Enrollment enrollment(EnrollmentDto enrollmentDto) {
+	public String enrollment(EnrollmentDto enrollmentDto) {
 		Enrollment createdEnrollment = new Enrollment();
 		Optional<Course> course = courseRepo.findById(enrollmentDto.getCourseId());
 		if (course.isPresent()) {
@@ -40,7 +43,7 @@ public class EnrollmentService {
 			throw new CourseNotFound("Course not found with id " + enrollmentDto.getCourseId());
 		}
 
-		Optional<Student> student = studentRepo.findById(enrollmentDto.getStudentId());
+		Optional<Users> student = studentRepo.findById(enrollmentDto.getStudentId());
 		if (student.isPresent()) {
 			createdEnrollment.setStudent(student.get());
 		} else {
@@ -48,27 +51,61 @@ public class EnrollmentService {
 		}
 
 		createdEnrollment.setEnrolledAt(enrollmentDto.getEnrolledAt());
-		Enrollment savedEnrollment = enrollmentRepo.save(createdEnrollment);
-		String studentEmail = student.get().getStudentEmailId();
+		enrollmentRepo.save(createdEnrollment);
+		String studentEmail = student.get().getEmailId();
 		String courseName = course.get().getCourseTitle();
 		String subject = "Welcome to " + courseName;
 		String body = String.format(
-				"Hello " + student.get().getStudentName() + ", You have successfully enrolled in the course %s",
+				"Hello " + student.get().getUsername() + ", You have successfully enrolled in the course %s",
 				courseName);
 		emailService.sendEmail(studentEmail, subject, body);
-		return savedEnrollment;
+		return "Your Successfully Enrolled with student id " + enrollmentDto.getStudentId() + " with course id "
+				+ enrollmentDto.getCourseId() + " and your enrollment id is " + createdEnrollment.getEnrollmentId();
 	}
 
-	public Enrollment getEnrollment(Integer enrollmentId) {
+	public EnrollmentDetails getEnrollment(Integer enrollmentId) {
 		Optional<Enrollment> optionalEnrollment = enrollmentRepo.findById(enrollmentId);
 		if (optionalEnrollment.isPresent()) {
-			return optionalEnrollment.get();
+			Enrollment enrollment = optionalEnrollment.get();
+			EnrollmentDetails enrollmentDetails = new EnrollmentDetails();
+			enrollmentDetails.setEnrolledAt(enrollment.getEnrolledAt());
+			StudentDto student = new StudentDto();
+			student.setUsername(enrollment.getStudent().getUsername());
+			student.setPassword(enrollment.getStudent().getPassword());
+			student.setEmailId(enrollment.getStudent().getEmailId());
+			student.setPhoneNumber(enrollment.getStudent().getPhoneNumber());
+			student.setRole(enrollment.getStudent().getRole().toString());
+			student.setLocation(enrollment.getStudent().getLocation());
+			student.setEducationBackground(enrollment.getStudent().getEducationBackground());
+			student.setRegisteredAt(enrollment.getStudent().getRegisteredAt());
+			enrollmentDetails.setStudent(student);
+			enrollmentDetails.setCourse(enrollment.getCourse());
+			return enrollmentDetails;
+
 		} else {
 			throw new EnrollmentNotFound("Enrollment Not Found with Id " + enrollmentId);
 		}
 	}
 
-	public List<Enrollment> getAllEnrollments() {
-		return enrollmentRepo.findAll();
+	public List<EnrollmentDetails> getAllEnrollments(Integer courseId) {
+		List<Enrollment> enrollments = enrollmentRepo.findByCourseCourseId(courseId);
+		List<EnrollmentDetails> listEnrollmentDetails = new ArrayList<>();
+		for (Enrollment enrollment : enrollments) {
+			EnrollmentDetails enrollmentDetails = new EnrollmentDetails();
+			enrollmentDetails.setEnrolledAt(enrollment.getEnrolledAt());
+			StudentDto student = new StudentDto();
+			student.setUsername(enrollment.getStudent().getUsername());
+			student.setPassword(enrollment.getStudent().getPassword());
+			student.setEmailId(enrollment.getStudent().getEmailId());
+			student.setPhoneNumber(enrollment.getStudent().getPhoneNumber());
+			student.setRole(enrollment.getStudent().getRole().toString());
+			student.setLocation(enrollment.getStudent().getLocation());
+			student.setEducationBackground(enrollment.getStudent().getEducationBackground());
+			student.setRegisteredAt(enrollment.getStudent().getRegisteredAt());
+			enrollmentDetails.setStudent(student);
+			enrollmentDetails.setCourse(enrollment.getCourse());
+			listEnrollmentDetails.add(enrollmentDetails);
+		}
+		return listEnrollmentDetails;
 	}
 }

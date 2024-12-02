@@ -2,7 +2,6 @@ package sample_project.OnlineCourseManagementSystem.model;
 
 import java.util.ArrayList;
 import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
@@ -27,12 +26,10 @@ public class Course {
 	private String courseTitle;
 	private String courseDescription;
 	private String courseCreatedAt;
-
 	@ManyToOne
 	@JoinColumn(name = "instructor_id", nullable = false)
 	@JsonBackReference
-	private Instructor instructor;
-
+	private Users instructor;
 	@OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
 	@JsonManagedReference
 	private List<Content> contents = new ArrayList<>();
